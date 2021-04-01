@@ -9,7 +9,7 @@ var circle = svg
   .attr("cx", 400)
   .attr("cy", 400)
   .attr("r", 100)
-  .attr("fill", "yellow");
+  .attr("fill", "blue");
 
 var rect = svg
   .append("rect")
@@ -17,4 +17,4 @@ var rect = svg
   .attr("y", 400)
   .attr("width", 100)
   .attr("height", 100)
-  .attr("fill", "white");
+  .attr("fill", "red");

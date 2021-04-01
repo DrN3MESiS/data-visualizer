@@ -6,17 +6,18 @@ let svg = d3
 
 let data = [25, 20, 15, 10, 5];
 
-let rectangles = svg.selectAll("rect").data(data);
+let rectangles = svg.selectAll("circle").data(data);
 
 rectangles
   .enter()
   .append("rect")
-  .attr("cx", (d, i) => {
-    console.log(i);
-    return i * 20;
+  .attr("x", (d, i) => {
+    return i * 100;
   })
-  .attr("cy", 200)
-  .attr("r", (d) => {
+  .attr("y", 350)
+  .attr("width", 40)
+  .attr("height", (d) => {
+    console.log(`Height: `, d);
     return d;
   })
-  .attr("fill", "yellow");
+  .attr("fill", "red");
