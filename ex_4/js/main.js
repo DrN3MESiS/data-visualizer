@@ -15,6 +15,8 @@ const main = async () => {
     return;
   }
 
+  console.log(`data`, data);
+
   const x = d3
     .scaleBand()
     .domain(data)
