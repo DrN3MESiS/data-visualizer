@@ -6,7 +6,7 @@ let svg = d3
 
 let data = [25, 20, 15, 10, 5];
 
-let rectangles = svg.selectAll("circle").data(data);
+let rectangles = svg.selectAll("rect").data(data);
 
 rectangles
   .enter()
