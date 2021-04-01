@@ -4,33 +4,6 @@ let svg = d3
   .attr("width", 500)
   .attr("height", 500);
 
-const color = d3
-  .scaleOrdinal()
-  .domain([
-    "Burj Khalifa",
-    "Shanghai Tower",
-    "Abraj Al-Bait Clock Tower",
-    "Ping An Finance Centre",
-    "Golding Finance 117",
-    "Lotte World Tower",
-    "One World Trade Center",
-    "Guangzhou CTF Finance Center",
-    "Tianjin CTF Finance Center",
-    "China Zun",
-  ])
-  .range([
-    "RED",
-    "BLUE",
-    "YELLOW",
-    "ORANGE",
-    "INDIGO",
-    "RED",
-    "BLUE",
-    "YELLOW",
-    "ORANGE",
-    "INDIGO",
-  ]);
-
 const main = async () => {
   let data = [];
   try {
@@ -55,7 +28,10 @@ const main = async () => {
     d.height = parseFloat(d.height);
   });
 
-  console.log(`data`, data);
+  const dataNames = data.map((v) => {
+    return v.name;
+  });
+  const color = d3.scaleOrdinal().domain(dataNames).range(d3.schemeSet3);
 
   let rectangles = svg.selectAll("rect").data(data);
 
