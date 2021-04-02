@@ -84,7 +84,7 @@ const main = async () => {
 
   /** Process and Ranges*/
 
-  data = data.map((d) => {
+  data.map((d) => {
     d.revenue = parseFloat(d.revenue);
     d.profit = parseFloat(d.profit);
   });

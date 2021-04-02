@@ -1,10 +1,6 @@
 /*
  *    main.js
  */
-
-/*
- *    main.js
- */
 const margin = { top: 10, right: 10, bottom: 150, left: 100 };
 
 const width = 600;
@@ -20,59 +16,45 @@ const g = d3
 
 let data = [];
 
-const updateFrame = (data, x, y, xAxis, yAxis, flag) => {
-  const value = flag ? "revenue" : "profit";
-
-  let monthNames = data.map((e) => e.month);
-  let maxRevenue = d3.max(data, (d) => {
-    return d.revenue;
-  });
-  x.domain(monthNames);
-  y.domain([0, maxRevenue]);
-
-  const bottomAxis = d3.axisBottom(x).ticks(monthNames.length).tickValues(monthNames).tickPadding(2);
-
+const updateFrame = (data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year) => {
+  const curData = data[year]
+  // BOTTOM AXIS
+  const bottomAxis = d3.axisBottom(xScale).ticks(3).tickValues([400,4000,40000]).tickFormat((d) => {
+    return "$" + d;
+  })
   xAxis.call(bottomAxis).selectAll("text").attr("x", "15").attr("text-anchor", "end").style("fill", "black");
-
+  
+  // LEFT AXIS
   const leftAxis = d3
-    .axisLeft(y)
-    .ticks(5)
-    .tickFormat((d) => {
-      return "$" + d;
-    });
+    .axisLeft(yScale)
   yAxis.call(leftAxis).selectAll("text").style("fill", "black");
 
+
   /** Update Data */
-  const tangles = g.selectAll("rect").data(data);
-  tangles.exit().remove();
+  const cyr = g.selectAll("circle").data(curData);
+  cyr.exit().remove();
 
-  tangles
-    .attr("x", (d) => {
-      return x(d.month);
+  cyr
+    .attr("cx", (d) => {
+      return xScale(d.income);
     })
-    .attr("y", (d) => {
-      return y(d[value]);
+    .attr("cy", (d) => {
+      return yScale(d.life_exp);
     })
-    .attr("width", x.bandwidth)
-    .attr("height", (d) => {
-      return height - y(d[value]);
-    });
+    .attr("fill", (d) => { return colorScale(d.continent) })
+    .attr("r", (d) => { return Math.sqrt(areaScale(d.population)/Math.PI) });
 
-  tangles
+  cyr
     .enter()
-    .append("rect")
-
-    .attr("x", (d) => {
-      return x(d.month);
+    .append("circle")
+    .attr("cx", (d) => {
+      return xScale(d.income);
     })
-    .attr("y", (d) => {
-      return y(d[value]);
+    .attr("cy", (d) => {
+      return yScale(d.life_exp);
     })
-    .attr("width", x.bandwidth)
-    .attr("height", (d) => {
-      return height - y(d[value]);
-    })
-    .attr("fill", value === "revenue" ? "yellow" : "orange");
+    .attr("fill", (d) => { return colorScale(d.continent) })
+    .attr("r", (d) => { return Math.sqrt(areaScale(d.population)/Math.PI) });
 };
 
 const main = async () => {
@@ -88,7 +70,10 @@ const main = async () => {
 
   /** Process and Ranges*/
 
-  const formattedData = data.map((year) => {
+  let continentNames = new Set()
+  let ages = new Set()
+  
+  data = data.map((year) => {
     return year["countries"]
       .filter((country) => {
         var dataExists = country.income && country.life_exp;
@@ -96,16 +81,20 @@ const main = async () => {
         return dataExists;
       })
       .map((country) => {
+        continentNames.add(country.continent)
         country.income = +country.income;
 
         country.life_exp = +country.life_exp;
+        ages.add(Math.ceil(country.life_exp))
 
         return country;
       });
   });
 
-  const x = d3.scaleBand().range([0, width]).paddingInner(0.3).paddingOuter(0.3);
-  const y = d3.scaleLinear().range([height, 0]);
+  const xScale = d3.scaleLog().range([0, width]).domain([142, 150000])
+  const yScale = d3.scaleLinear().range([height, 0]).domain([0, 90])
+  const areaScale = d3.scaleLinear().domain([2000, 1_400_000_000]).range([25*Math.PI, 1500*Math.PI])
+  const colorScale = d3.scaleOrdinal().range(d3.schemePastel1).domain(continentNames.values());
 
   const xAxis = g
     .append("g")
@@ -123,7 +112,7 @@ const main = async () => {
     .attr("text-anchor", "middle")
     .attr("transform", "rotate(-90)")
     .style("fill", "black")
-    .text("Revenue (dlls.)");
+    .text("Life Expectancy (Years)");
 
   g.append("text")
     .attr("class", "x axis-label")
@@ -132,17 +121,17 @@ const main = async () => {
     .attr("font-size", "20px")
     .attr("text-anchor", "middle")
     .style("fill", "black")
-    .text("Month");
+    .text("GDP Per Capita ($)");
 
-  let flag = true;
-
-  // Rendering
-
+  let year = 0
   d3.interval(() => {
-    updateFrame(data, x, y, xAxis, yAxis, flag);
-    flag = !flag;
+    updateFrame(data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year);
+    year++;
+    if(year >= data.length){ 
+      year = 0
+    }
   }, 1000);
-  updateFrame(data, x, y, xAxis, yAxis, flag);
+  updateFrame(data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year);
 };
 
 main();
