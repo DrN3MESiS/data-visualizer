@@ -15,9 +15,13 @@ const g = d3
   .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
 
 let data = [];
+let yearLabel = null;
+let t = d3.transition().duration(750);
 
 const updateFrame = (data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year) => {
   const curData = data[year];
+  yearLabel.text(+(year + 1800));
+
   // BOTTOM AXIS
   const bottomAxis = d3
     .axisBottom(xScale)
@@ -26,17 +30,50 @@ const updateFrame = (data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, 
     .tickFormat((d) => {
       return "$" + d;
     });
-  xAxis.call(bottomAxis).selectAll("text").attr("x", "15").attr("text-anchor", "end").style("fill", "black");
+  xAxis.transition(t).call(bottomAxis).selectAll("text").attr("x", "15").attr("text-anchor", "end").style("fill", "black");
 
   // LEFT AXIS
   const leftAxis = d3.axisLeft(yScale);
   yAxis.call(leftAxis).selectAll("text").style("fill", "black");
 
+  //TIP
+  let tip = d3
+    .tip()
+    .attr("class", "d3-tip")
+    .html((d) => {
+      var text = "<strong>Country:</strong>";
+
+      text += "<span style='color:red'> " + d.country + "</span><br>";
+
+      text += "<strong>Continent:</strong> ";
+
+      text += "<span style='color:red;text-transform:capitalize'>" + d.continent + "</span><br>";
+
+      text += "<strong>Life Expectancy:</strong>";
+
+      text += "<span style='color:red'>" + d3.format(".2f")(d.life_exp) + "</span><br>";
+
+      text += "<strong>GDP Per Capita:</strong>";
+
+      text += "<span style='color:red'>" + d3.format("$,.0f")(d.income) + "</span><br>";
+
+      text += "<strong>Population:</strong>";
+
+      text += "<span style='color:red'>" + d3.format(",.0f")(d.population) + "</span><br>";
+
+      return text;
+    });
+  g.call(tip);
+
   /** Update Data */
-  const cyr = g.selectAll("circle").data(curData);
-  cyr.exit().remove();
+  const cyr = g.selectAll("circle").data(curData, (d) => {
+    return d.country;
+  });
+  cyr.exit().transition(t).remove();
 
   cyr
+    .enter()
+    .append("circle")
     .attr("cx", (d) => {
       return xScale(d.income);
     })
@@ -48,11 +85,11 @@ const updateFrame = (data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, 
     })
     .attr("r", (d) => {
       return Math.sqrt(areaScale(d.population) / Math.PI);
-    });
-
-  cyr
-    .enter()
-    .append("circle")
+    })
+    .on("mouseover", tip.show)
+    .on("mouseout", tip.hide)
+    .merge(cyr)
+    .transition(t)
     .attr("cx", (d) => {
       return xScale(d.income);
     })
@@ -135,6 +172,15 @@ const main = async () => {
     .attr("text-anchor", "middle")
     .style("fill", "black")
     .text("GDP Per Capita ($)");
+
+  yearLabel = g
+    .append("text")
+    .attr("class", "x axis-label")
+    .attr("x", width - 35)
+    .attr("y", height)
+    .attr("font-size", "35px")
+    .attr("text-anchor", "middle")
+    .style("fill", "black");
 
   // Continent Labels
   let legend = g.append("g").attr("transform", "translate(" + (width - 10) + "," + (height - 125) + ")");

@@ -22,7 +22,7 @@ let t = d3.transition().duration(750);
 const updateFrame = (data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year) => {
   let curData = data[year];
   $("#year")[0].innerHTML = +(year + 1800);
-  yearLabel.text(year);
+  yearLabel.text(+(year + 1800));
   var continent = $("#continent-select").val();
 
   curData = curData.filter((d) => {
@@ -115,7 +115,7 @@ const updateFrame = (data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, 
       return Math.sqrt(areaScale(d.population) / Math.PI);
     });
 
-  // $("#date-slider").slider("value", +(year + 1800));
+  $("#date-slider").slider("value", +(year + 1800));
 };
 
 const main = async () => {
@@ -205,13 +205,6 @@ const main = async () => {
     legendRow.append("text").attr("x", -10).attr("y", 10).attr("text-anchor", "end").style("text-transform", "capitalize").text(continent);
   });
 
-  // d3.interval(() => {
-  //   updateFrame(data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year);
-  //   year++;
-  //   if (year >= data.length) {
-  //     year = 0;
-  //   }
-  // }, 1000);
   let year = 0;
   let interval = null;
 
@@ -246,13 +239,17 @@ const main = async () => {
     updateFrame(data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year);
   });
 
-  $("#date-slider")
-    .slider({ max: 2014, min: 1800, step: 1 })
-    .on("slidechange", (e, ui) => {
+  $("#date-slider").slider({
+    max: 2014,
+    min: 1800,
+    step: 1,
+    animate: "fast",
+    slide: (event, ui) => {
+      // Events
       year = ui.value - 1800;
-
       updateFrame(data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year);
-    });
+    },
+  });
 
   $("#continent-select").on("change", () => {
     updateFrame(data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year);
