@@ -17,18 +17,20 @@ const g = d3
 let data = [];
 
 const updateFrame = (data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year) => {
-  const curData = data[year]
+  const curData = data[year];
   // BOTTOM AXIS
-  const bottomAxis = d3.axisBottom(xScale).ticks(3).tickValues([400,4000,40000]).tickFormat((d) => {
-    return "$" + d;
-  })
+  const bottomAxis = d3
+    .axisBottom(xScale)
+    .ticks(3)
+    .tickValues([400, 4000, 40000])
+    .tickFormat((d) => {
+      return "$" + d;
+    });
   xAxis.call(bottomAxis).selectAll("text").attr("x", "15").attr("text-anchor", "end").style("fill", "black");
-  
-  // LEFT AXIS
-  const leftAxis = d3
-    .axisLeft(yScale)
-  yAxis.call(leftAxis).selectAll("text").style("fill", "black");
 
+  // LEFT AXIS
+  const leftAxis = d3.axisLeft(yScale);
+  yAxis.call(leftAxis).selectAll("text").style("fill", "black");
 
   /** Update Data */
   const cyr = g.selectAll("circle").data(curData);
@@ -41,8 +43,12 @@ const updateFrame = (data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, 
     .attr("cy", (d) => {
       return yScale(d.life_exp);
     })
-    .attr("fill", (d) => { return colorScale(d.continent) })
-    .attr("r", (d) => { return Math.sqrt(areaScale(d.population)/Math.PI) });
+    .attr("fill", (d) => {
+      return colorScale(d.continent);
+    })
+    .attr("r", (d) => {
+      return Math.sqrt(areaScale(d.population) / Math.PI);
+    });
 
   cyr
     .enter()
@@ -53,8 +59,12 @@ const updateFrame = (data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, 
     .attr("cy", (d) => {
       return yScale(d.life_exp);
     })
-    .attr("fill", (d) => { return colorScale(d.continent) })
-    .attr("r", (d) => { return Math.sqrt(areaScale(d.population)/Math.PI) });
+    .attr("fill", (d) => {
+      return colorScale(d.continent);
+    })
+    .attr("r", (d) => {
+      return Math.sqrt(areaScale(d.population) / Math.PI);
+    });
 };
 
 const main = async () => {
@@ -70,9 +80,9 @@ const main = async () => {
 
   /** Process and Ranges*/
 
-  let continentNames = new Set()
-  let ages = new Set()
-  
+  let continentNames = new Set();
+  let ages = new Set();
+
   data = data.map((year) => {
     return year["countries"]
       .filter((country) => {
@@ -81,19 +91,22 @@ const main = async () => {
         return dataExists;
       })
       .map((country) => {
-        continentNames.add(country.continent)
+        continentNames.add(country.continent);
         country.income = +country.income;
 
         country.life_exp = +country.life_exp;
-        ages.add(Math.ceil(country.life_exp))
+        ages.add(Math.ceil(country.life_exp));
 
         return country;
       });
   });
 
-  const xScale = d3.scaleLog().range([0, width]).domain([142, 150000])
-  const yScale = d3.scaleLinear().range([height, 0]).domain([0, 90])
-  const areaScale = d3.scaleLinear().domain([2000, 1_400_000_000]).range([25*Math.PI, 1500*Math.PI])
+  const xScale = d3.scaleLog().range([0, width]).domain([142, 150000]);
+  const yScale = d3.scaleLinear().range([height, 0]).domain([0, 90]);
+  const areaScale = d3
+    .scaleLinear()
+    .domain([2000, 1_400_000_000])
+    .range([25 * Math.PI, 1500 * Math.PI]);
   const colorScale = d3.scaleOrdinal().range(d3.schemePastel1).domain(continentNames.values());
 
   const xAxis = g
@@ -123,12 +136,21 @@ const main = async () => {
     .style("fill", "black")
     .text("GDP Per Capita ($)");
 
-  let year = 0
+  // Continent Labels
+  let legend = g.append("g").attr("transform", "translate(" + (width - 10) + "," + (height - 125) + ")");
+
+  [...continentNames.values()].map((continent, i) => {
+    let legendRow = legend.append("g").attr("transform", "translate(0, " + i * 20 + ")");
+    legendRow.append("rect").attr("width", 10).attr("height", 10).attr("fill", colorScale(continent));
+    legendRow.append("text").attr("x", -10).attr("y", 10).attr("text-anchor", "end").style("text-transform", "capitalize").text(continent);
+  });
+
+  let year = 0;
   d3.interval(() => {
     updateFrame(data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year);
     year++;
-    if(year >= data.length){ 
-      year = 0
+    if (year >= data.length) {
+      year = 0;
     }
   }, 1000);
   updateFrame(data, xScale, yScale, areaScale, colorScale, xAxis, yAxis, year);

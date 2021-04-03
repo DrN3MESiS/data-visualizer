@@ -15,6 +15,7 @@ const g = d3
   .attr("transform", "translate(" + margin.left + ", " + margin.top + ")");
 
 let data = [];
+let t = d3.transition().duration(750);
 
 const updateFrame = (data, x, y, xAxis, yAxis, flag) => {
   const value = flag ? "revenue" : "profit";
@@ -28,7 +29,7 @@ const updateFrame = (data, x, y, xAxis, yAxis, flag) => {
 
   const bottomAxis = d3.axisBottom(x).ticks(monthNames.length).tickValues(monthNames).tickPadding(2);
 
-  xAxis.call(bottomAxis).selectAll("text").attr("x", "15").attr("text-anchor", "end").style("fill", "black");
+  xAxis.transition(t).call(bottomAxis).selectAll("text").attr("x", "15").attr("text-anchor", "end").style("fill", "black");
 
   const leftAxis = d3
     .axisLeft(y)
@@ -40,31 +41,27 @@ const updateFrame = (data, x, y, xAxis, yAxis, flag) => {
 
   /** Update Data */
   const tangles = g.selectAll("rect").data(data);
-  tangles.exit().remove();
-
-  tangles
-    .attr("x", (d) => {
-      return x(d.month);
-    })
-    .attr("y", (d) => {
-      return y(d[value]);
-    })
-    .attr("width", x.bandwidth)
-    .attr("height", (d) => {
-      return height - y(d[value]);
-    });
+  tangles.exit().attr("fill", "red").transition(t).attr("y", y(0)).attr("height", 0).remove();
 
   tangles
     .enter()
     .append("rect")
-
+    .attr("fill", "grey")
+    .attr("y", y(0))
+    .attr("height", 0)
     .attr("x", (d) => {
       return x(d.month);
     })
+    .attr("width", x.bandwidth)
+    .merge(tangles)
+    .transition(t)
+    .attr("x", (d) => {
+      return x(d.month);
+    })
+    .attr("width", x.bandwidth)
     .attr("y", (d) => {
       return y(d[value]);
     })
-    .attr("width", x.bandwidth)
     .attr("height", (d) => {
       return height - y(d[value]);
     })
