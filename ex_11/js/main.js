@@ -34,15 +34,15 @@ var yAxisCall = d3.axisLeft().tickFormat(formatBillion);
 // TODO: create the area generator.
 // The x coordinate will be the date of the data
 // while y0 and y1 will be in the 0 and 1 positions of the d element
-// TODO: create the stack
 var area = d3
   .area()
   .x((d) => {
-    return x(d.date);
+    return x(d.data.date);
   })
-  .y0(y(0))
-  .y1(y(1));
+  .y0((d) => y(d[0]))
+  .y1((d) => y(d[1]));
 
+// TODO: create the stack
 var stack = d3.stack();
 
 // Axis groups
@@ -67,7 +67,7 @@ d3.csv("https://raw.githubusercontent.com/gcastillo56/d3Lab/master/charts/stacke
     );
 
     var keys = data.columns.filter((key) => {
-      return key !== "Month";
+      return key !== "date";
     });
 
     data.forEach((d) => {
@@ -101,16 +101,12 @@ d3.csv("https://raw.githubusercontent.com/gcastillo56/d3Lab/master/charts/stacke
     // that will contain the area path
     var browser = g
       .selectAll(".browser")
-
       .data(stack(data))
-
       .enter()
       .append("g")
-
       .attr("class", (d) => {
         return "browser " + d.key;
       })
-
       .attr("fill-opacity", 0.5);
 
     // TODO: call the area generator with the appropriate data
@@ -119,12 +115,23 @@ d3.csv("https://raw.githubusercontent.com/gcastillo56/d3Lab/master/charts/stacke
       .attr("class", "area")
       .attr("d", area)
       .style("fill", (d) => {
-        e;
         return color(d.key);
       });
 
     // Create legend
     // TODO: Create a legend showing all the names of every color
+    let legend = g.append("g").attr("transform", "translate(" + (width + 150) + "," + (height - 250) + ")");
+
+    d3.keys(data[0])
+      .filter((key) => {
+        return key !== "date";
+      })
+      .reverse()
+      .map((key, i) => {
+        let row = legend.append("g").attr("transform", "translate(0, " + i * 20 + ")");
+        row.append("rect").attr("width", 10).attr("height", 10).attr("fill", color(key));
+        row.append("text").attr("x", -10).attr("y", 10).attr("text-anchor", "end").style("text-transform", "capitalize").text(key);
+      });
   })
   .catch((error) => {
     console.log(error);
